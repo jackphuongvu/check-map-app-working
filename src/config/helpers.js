@@ -1,8 +1,9 @@
 import {NetInfo,Alert} from "react-native";
-import DeviceSettings from "react-native-device-settings";
+// import DeviceSettings from "react-native-device-settings";
+import firebase from './firebase';
 
 import alerts from "./alerts";
-import GPSState from "react-native-gps-state";
+// import GPSState from "react-native-gps-state";
 
 export function checkInternetConnection () {
   // Check Internet Permission.
@@ -18,60 +19,34 @@ export function checkInternetConnection () {
         [
           {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
           {text: 'OK', onPress: () => {
-              // TODO: Open wifi settings.
-              DeviceSettings.wifi();
+              // TODO: Open wifi settings with Expo.
             }},
         ],
         { cancelable: false }
       );
     }
-  });
+  }).catch(e => console.log(e));
 }
-
-export function alertLocationSettings () {
-  Alert.alert(
-    'Thông báo',
-    alerts.LOCATION.turnOnNotification,
-    [
-      {text: 'Cancel', onPress: () => console.log('Cancel Pressed'), style: 'cancel'},
-      {text: 'OK', onPress: () => {
-          GPSState.openSettings();
-        }},
-    ],
-    { cancelable: false }
-  );
-}
-
 /** ===================================================================== */
-export function random_position(latitude, longitude, meters=50) {
-  // def random_position(latitude, longitude, meters=50):
-  let r = meters / 111300.0;
+export function testCallAPIforSpeedLimit () {
+  let url = 'https://geocoder.api.here.com/6.2/geocode.json?app_id=7L4HoLOzKfBCAWOnNLc4&app_code=2km0tDZGFtBn3zafKq7wRQ&country=VNM&street=X%C3%B4+Vi%E1%BA%BFt+Ngh%E1%BB%87+T%C4%A9nh&city=%C4%90%C3%A0+N%E1%BA%B5ng&mode=retrieveAddresses&locationAttributes=linkInfo';
 
-  let y0 = latitude;
-  let x0 = longitude;
+  fetch(url)
+    .then(response => response.json())
+    .then((results) => {
+      // console.log(results);
+      
+      let speed = results.Response.View[0].Result;
+      let firstItem = speed[0].Location.LinkInfo;
+      console.log(firstItem);
+      
+    })
+    .catch(error => console.log(error));
 
-  let u = Math.random();
-  let v = Math.random();
-
-  let w = r * Math.sqrt(u);
-  let t = 2 * Math.PI * v;
-
-  let x = w * Math.cos(t);
-
-  let y1 = w * Math.sin(t);
-  let x1 = x / Math.cos(y0);
-
-  return {'latitude': (y0 + y1), 'longitude': (x0 + x1)}
 }
 
-export function get_fake_drivers (latitude, longitude) {
-  return [
-    {'id': 1, 'name': 'Blick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 2, 'name': 'Flick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 3, 'name': 'Glick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 4, 'name': 'Plick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 5, 'name': 'Quick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 6, 'name': 'Snick', 'position': random_position(latitude, longitude, 600)},
-    {'id': 7, 'name': 'Whick', 'position': random_position(latitude, longitude, 600)},
-  ]
+export function getTotalChildren (strChildren) {
+  firebase.database().ref(strChildren).on('value',(snapshot) => {
+    console.log("There are "+snapshot.numChildren()+" messages in" + strChildren);
+  });
 }

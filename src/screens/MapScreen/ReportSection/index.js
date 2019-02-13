@@ -16,20 +16,6 @@ class ReportSection extends Component {
           <PoliceReportButton ImageUrl={images.MapScreen.police}
                               label='Báo Trạm Công An'/>
         </View>
-        {/*<View style={styles.buttonRow}>*/}
-          {/*<ReportButton onPress={() => {*/}
-            {/*// this.props.sendTrafficCarReport();*/}
-          {/*}}*/}
-                        {/*ImageUrl={images.MapScreen.trafficLight}*/}
-                        {/*label='Báo Kẹt Đường'/>*/}
-          {/*<ReportButton onPress={() => {*/}
-            {/*console.log('Click Radio Button');*/}
-
-            {/*// this.props.navigation.navigate("test");*/}
-          {/*}}*/}
-                        {/*ImageUrl={images.MapScreen.radio}*/}
-                        {/*label='Nghe Radio'/>*/}
-        {/*</View>*/}
       </View>
     );
   }

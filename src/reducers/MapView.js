@@ -1,11 +1,12 @@
 import GeoFire from 'geofire';
-import firebase from "react-native-firebase";
+import firebase from "../config/firebase";
 import {
   SET_REGION, SET_STREET, SET_CITY, SET_CURRENT_SPEED, SET_LIMIT_SPEED,
   SET_DROP_DOWN,
-  SET_NOTE_PLACES, SET_GEOFIRE,
-
-  ADD_MARKER
+  SET_NOTE_PLACES,
+  SET_GEOFIRE,
+  ADD_MARKER,
+  SET_GEOQUERY
 } from "../actions/actionTypes";
 
 import {LATITUDE_DELTA,LONGITUDE_DELTA} from '../config/constants';
@@ -18,9 +19,9 @@ const mapState = {
   limitSpeed : 0,
   dropDown : null,
   notePlaces : [],
-  geoFire : new GeoFire(firebase.database().ref('geofire')) // This ref will control all markers in the app.
+  geoFire : new GeoFire(firebase.database().ref('geofire')), // This ref will control all markers in the app.
+  geoQuery : null
 };
-
 
 const notePlace = (state, action) => {
   switch(action.type) {
@@ -77,7 +78,10 @@ const MapView = (state = mapState, action) => {
       return Object.assign({}, state, {
         geoFire : action.geoFire
       });
-
+    case SET_GEOQUERY:
+      return Object.assign({}, state, {
+        geoQuery : action.geoQuery
+      });
     case ADD_MARKER:
       return Object.assign({}, state, {
         notePlaces : [

@@ -1,93 +1,35 @@
 import React, { Component } from 'react';
-import { StyleSheet, NetInfo, Alert, Platform, Image, InteractionManager} from 'react-native';
-import MapView, { PROVIDER_GOOGLE } from 'react-native-maps';
-import Geocoder from 'react-native-geocoder';
-import Permissions from 'react-native-permissions';
-import GPSState from 'react-native-gps-state';
-// import geolib from 'geolib';
-import firebase from 'react-native-firebase';
-import GeoFire from 'geofire';
+import { StyleSheet, NetInfo, Image, View, Text } from 'react-native';
+import { MapView, Location, Permissions } from 'expo';
+import queryString from 'query-string';
 
-import TESTING from '../../data/TESTING';
-import keys from '../../config/key';
-import {messagesReportItems} from '../../config/constants';
-import alerts from '../../config/alerts';
-import {alertLocationSettings, get_fake_drivers} from '../../config/helpers';
-import mapDarkStyle from '../../config/mapDarkStyle';
+
+import firebase from '../../config/firebase';
+
+import {checkInternetConnection, testCallAPIforSpeedLimit,
+  getTotalChildren
+} from '../../config/helpers';
+import key from '../../config/key';
+// import {HERE_MAPS_APP_ID, HERE_MAPS_APP_CODE} from '../../config/key';
+import {messagesReportItems, RADIUS_GET_LOCATION} from '../../config/constants';
 import images from '../../config/images';
+import mapDarkStyle from '../../config/mapDarkStyle';
 import styles from './styles';
-import {checkInternetConnection} from '../../config/helpers';
-import {setNotePlaces} from "../../actions/map";
-const googleApiUrl = 'https://maps.googleapis.com/maps/api/geocode/json';
-
-Geocoder.fallbackToGoogle(keys.GEO_CODING_API_KEY);
 
 class Map extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      locationPermission : false
-    };
-    this.handleFirstConnectivityChange = this.handleFirstConnectivityChange.bind(this);
-    // this.geoFire = new GeoFire(firebase.database().ref('geofire').push());
-  }
+  // constructor(props) {
+  //   super(props);
+  //   this.state = {
+  //     hasLocationPermissions : false
+  //   };
+  //   this.handleFirstConnectivityChange = this.handleFirstConnectivityChange.bind(this);
+  // }
 
-  _requestPermission = () => {
-    Permissions.request('location').then(response => {
-      // Returns once the user has chosen to 'allow' or to 'not allow' access
-      // Response is one of: 'authorized', 'denied', 'restricted', or 'undetermined'
-      console.log(response);
-      this.setState({ locationPermission: response === 'authorized' });
-
-      if (response === 'authorized') {
-        //
-      } else {
-        this._requestPermission();
-      }
-    });
+  state = {
+    hasLocationPermissions : false,
+    // notePlacesAsState : []
   };
 
-  checkLocationPermission = () => {
-    Permissions.check('location').then(response => {
-      // Response is one of: 'authorized', 'denied', 'restricted', or 'undetermined'
-      this.setState({
-        locationPermission : response === 'authorized'
-      });
-      // console.log(response);
-      if (response !== 'authorized') {
-        this._requestPermission();
-      }
-    }).catch(e => console.log(e));
-
-    // let locationPermission = await Permissions.check('location');
-    // console.log(locationPermission);
-  };
-
-  checkLocationSetting = () => {
-    GPSState.getStatus().then((status) => {
-      switch(status) {
-        case GPSState.NOT_DETERMINED:
-          // alert('Please, allow the location, for us to do amazing things for you!');
-          break;
-        case GPSState.RESTRICTED:
-          alertLocationSettings();
-          break;
-        case GPSState.DENIED:
-          // alert('It`s a shame that you do not allowed us to use location :(');
-          break;
-        case GPSState.AUTHORIZED_ALWAYS:
-        case GPSState.AUTHORIZED_WHENINUSE:
-          console.log('updateCurrentState CHECKING LOCATIONS');
-          this.props.updateCurrentState();
-          break;
-      }
-    }).catch(e => console.log(e));
-  };
-
-
-  /** Listener for Updating Internet Connection */
-  // Not working AND both works sometimes.
-  // TODO: Checking later.
   handleFirstConnectivityChange(connectionInfo) {
     // console.log('CHECKING: handleFirstConnectivityChange');
     // this.props.updateCurrentState();
@@ -99,156 +41,180 @@ class Map extends Component {
     );
   }
 
+  // componentWillReceiveProps(nextProps) {
+  //   // set State of this thing. notePlacesAsState
+  //   console.log(this.nextProps);
+  //   this.setState({
+  //     notePlacesAsState : nextProps.notePlacesAsState
+  //   });
+  // }
+
+  getLocationAsync = async () => {
+    // const { Location, Permissions } = Expo;
+    const { status } = await Permissions.askAsync(Permissions.LOCATION);
+    if (status === 'granted') {
+      // return Location.getCurrentPositionAsync({enableHighAccuracy: true});
+    } else {
+      this.getLocationAsync();
+      throw new Error('Location permission not granted');
+    }
+  };
+  checkLocationPermission = async () => {
+    const { status } = await Permissions.getAsync(Permissions.NOTIFICATIONS);
+    if (status !== 'granted') {
+      this.getLocationAsync();
+    }
+  };
+  checkLocationSetting = async () => {
+    // TODO: Checking with Location Settings later if we can with Expo
+  };
   getTypeReportBySlug (type) {
     return messagesReportItems.filter((item ) => {
       return item.type === type;
     })[0];
   }
-
   componentWillMount() {
+  
+    // Checking current Location.
+    // this._getLocationAsync();
+    // this.props.getCurrentLocation();
+  }
+  componentDidMount () {
     // Check Location Permission
     this.checkLocationPermission();
     //Get the current GPS state
-    this.checkLocationSetting();
+    // this.checkLocationSetting();
+    // console.log('updateCurrentState with componentWillMount');
 
     // Check Internet Connection
     checkInternetConnection();
-  }
-  /** ======================================================================== */
 
-  // watchNotePlaces () {
-  //   const onChildChange = (data) => {
-  //     let item = data.val();
-  //
-  //     this.props.geoFire.set('police:' + item.id, [item.coordinate.latitude,
-  //       item.coordinate.longitude]);
-  //   };
-  //
-  //   // The problem is How can this func will be called.
-  //   firebase.database().ref('notePlaces').on('child_added', onChildChange);
-  //   firebase.database().ref('notePlaces').on('child_changed', onChildChange);
-  // }
+    // this.props.updateCurrentState();
+    console.log('GOI HAM NAY TRONG componentWillMount CUA MAP');
+    this.props.updateCurrentState();
 
-  /** Query all note places around 5KM */
-  queryNotePlaces() {
-    let radius = 5; // 100m
-    let currentLocation = [
-      16.0311044, // this.props.initialRegion.latitude ||
-      108.21407149999999 // this.props.initialRegion.longitude ||
-    ];
-
-    let driversFound = {};
-
-    let geoQuery = this.props.geoFire.query({center: currentLocation, radius});
-
-    geoQuery.on("key_entered", (key, location, distance) => {
-
-      console.log(key + " is located at [" + location + "] which is within the query (" + distance.toFixed(2) + " km from center)");
-    });
-  }
-
-  componentDidMount () {
-    //===================================================================
-    // InteractionManager.runAfterInteractions(_ => {
-    //   console.log('Watch Drivers.');
-    //   console.log('Checking Position');
-    //   setTimeout(() => {
-    //     console.log('Time OUT!');
-    //     // TODO
-    //   }, 100);
-    // });
-
-
-    // TODO: Request Location Permission if locationPermission is false after each times 5s.
-    // Call this function for the first time running App.
-    // this.props.fetchNotePlaces(); // Call this function in getCurrentLocation already.
-
-    /** Listen to Check GPS Setting */
-    GPSState.addListener((status)=> {
-      switch(status) {
-        case GPSState.AUTHORIZED_ALWAYS:
-        case GPSState.AUTHORIZED_WHENINUSE:
-          console.log('updateCurrentState Checking first time!');
-          this.props.updateCurrentState();
-          break;
-      }
-    });
-
-    // TODO: Not working in Children Component
+    /** Checking Internet Connection. */
     NetInfo.addEventListener(
       'connectionChange',
       this.handleFirstConnectivityChange
     );
+    // ==================================================
+    
+    const onChildChange = (data) => {
+      const position = data.val();
+      // this.props.queryNotePlacesWithAsync();
+    }
+
+    firebase.database().ref('geofire').on('child_added', onChildChange);
+    firebase.database().ref('geofire').on('child_changed', onChildChange);
 
     /** Update current location */
-    this.watchID = navigator.geolocation.watchPosition(async (position) => {
 
-      /** Set current speed */
-      this.props.setCurrentSpeed(position.coords.speed);
+    Location.watchPositionAsync({enableHighAccuracy: true, distanceInterval: 1}, function(position){
+      // console.log(position);
+    });
 
-      /** Set limit speed */
-      // this.props.setLimitSpeed();
+    this.watchID = navigator.geolocation.watchPosition(
+      async (position) => {
 
-      /** Set coordinate */
-      this.props.setRegion({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude
-      });
+        // console.log(position);
 
-      /** Set current city and street */
-      if (Object.values(this.props.initialRegion).length) {
-        Geocoder.geocodePosition({
-          lat : this.props.initialRegion.latitude,
-          lng : this.props.initialRegion.longitude
-        }).then(res => {
-          let firstItem = res[0];
-          let streetName = firstItem.streetName;
-          let cityName = firstItem.adminArea;
+        /** Set current speed */
+        // let speed = (position.coords.speed * 3.6).toFixed(1);
+        this.props.setCurrentSpeed(position.coords.speed);
+
+        /** Set coordinate */
+        this.props.setRegion({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude
+        });
+
+        /** Set current city and street */
+        Location.reverseGeocodeAsync(position.coords).then(geocode => {
+          let firstItem = geocode[0];
+          let streetName = firstItem.street;
+          let cityName = firstItem.region;
           this.props.setStreet(streetName);
           this.props.setCity(cityName);
-        })
-          .catch(err => console.log(err));
-      }
+        }).catch(e => console.log(e));
 
-      /** Update geoFire location of Driver. */
-      let userID = 1;
-      this.props.geoFire.set('driver:' + userID, [this.props.initialRegion.latitude, this.props.initialRegion.longitude]);
+        /** Set limit speed */
+        // this.props.setLimitSpeed();
+        // testCallAPIforSpeedLimit();
+        // DOING =============================
 
-      /** Checking Note Places */
-      // TODO:
-      this.props.queryNotePlacesWithAsync();
+        /** Update geoFire location of Driver. */
+        // let userID = 1;
+        // this.props.geoFire.set('driver:' + userID, [this.props.initialRegion.latitude, this.props.initialRegion.longitude]);
+        // Checking now with geoFire of Driver.
 
-    }, (error) => console.log(error.message),
-      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0, distanceFilter: 1});
+        /** Checking Note Places */
+        // this.props.queryNotePlacesWithAsync();
+        // TODO is checking
 
+        // console.log(this.props.notePlaces);
+      },
+      (error) => console.log(error.message),
+      { enableHighAccuracy: true, timeout: 20000, maximumAge: 0, distanceFilter: 1},
+
+
+
+    );
+
+    // TODO: Request Location Permission if locationPermission is false after each times 5s.
+  }
+
+  /** Checking Firebase new Item */
+  // componentWillReceiveProps() {
+  //   const onChildChange = (snapshot) => {
+  //     let data = snapshot.val();
+  //     console.log('componentWillReceiveProps');
+  //     console.log(data);
+  //   }
+  //   firebase.database().ref('geofire').on('child_added', onChildChange);
+  // }
+  // componentWillUpdate() {
+  //   const onChildChange = (snapshot) => {
+  //     let data = snapshot.val();
+  //     console.log('componentWillUpdate');
+  //     console.log(data);
+  //   }
+  //   firebase.database().ref('geofire').on('child_added', onChildChange);
+  // }
+  // componentDidUpdate() {
+  //   const onChildChange = (snapshot) => {
+  //     let data = snapshot.val();
+  //     console.log('componentDidUpdate');
+  //     console.log(data);
+  //   }
+  //   firebase.database().ref('geofire').on('child_added', onChildChange);
+  // }
+  // ==============================
+
+
+  componentWillUnmount() {
+    navigator.geolocation.clearWatch(this.watchID);
   }
   addNewMarker(e) {
     let item = e.nativeEvent.coordinate; // console.log(e.nativeEvent.coordinate)
     // console.log(item);
     this.props.sendMarkerToServer(item);
   }
-  componentWillUnmount() {
-    navigator.geolocation.clearWatch(this.watchID);
-    GPSState.removeListener();
-  }
-  _onRenderMap() {
-    console.log('onLayout function');
-    setTimeout(_ => {
-      console.log('_onRenderMap');
-      // this.onChangePosition(this.state.passengerPosition)
-    }, 1000);
-    InteractionManager.runAfterInteractions(_ => {
-      setTimeout(_ => {
-        console.log('_onRenderMap');
-        // this.onChangePosition(this.state.passengerPosition)
-      }, 1000)
-    })
-  }
+  _getLocationAsync = async () => {
+    let { status } = await Permissions.askAsync(Permissions.LOCATION);
+    if (status === 'granted') {
+      this.setState({ hasLocationPermissions: true });
+    }
+
+    // let location = await Location.getCurrentPositionAsync({});
+    // console.log(location);
+    // this.setState({ location });
+  };
   render() {
     return (
       <MapView
         style={[StyleSheet.absoluteFillObject, styles.MapViewContainer]}
-        provider={PROVIDER_GOOGLE}
+        provider={MapView.PROVIDER_GOOGLE}
         initialRegion={this.props.initialRegion}
         showsUserLocation={true}
         showsMyLocationButton={false}
@@ -261,7 +227,6 @@ class Map extends Component {
         minZoomLevel={5}
         loadingEnabled={true}
         onPress={this.addNewMarker.bind(this)}
-        // onLayout={this._onRenderMap.bind(this)}
       >
         {this.props.initialRegion && (
           <MapView.Marker
@@ -271,8 +236,19 @@ class Map extends Component {
             }}
             anchor={{ x: 0.5, y: 0.5 }}
             image={images.MapScreen.car}
-            rotation={this.state.rotation}
+            // rotation={this.state.rotation}
             // flat={true}
+          />
+        )}
+        {this.props.initialRegion && (
+          <MapView.Circle
+            key = { ( this.props.initialRegion.latitude + this.props.initialRegion.longitude).toString() }
+            center = { this.props.initialRegion }
+            radius = { RADIUS_GET_LOCATION * 1000 }
+            strokeWidth = { 1 }
+            strokeColor = { '#1a66ff' }
+            fillColor = { 'rgba(230,238,255,0.5)' }
+            // onRegionChangeComplete = { this.onRegionChangeComplete.bind(this) }
           />
         )}
         {this.props.notePlaces && this.props.notePlaces.length > 0 && this.props.notePlaces.map((place) => {
@@ -281,12 +257,21 @@ class Map extends Component {
           // const imageUrl = markerItem.logoImage;
           return (
             <MapView.Marker key={`police${place.id}`}
-                            coordinate={place.coordinate}
-                            // image={imageUrl}
+                            // coordinate={place.coordinate}
+                            coordinate={{
+                              latitude : place.coordinate.latitude,
+                              longitude: place.coordinate.longitude,
+                            }}
+              // image={imageUrl}
             >
-              <Image source={images.MapScreen.police}
+              {/* <View style={{
+                backgroundColor : 'red'
+              }}>
+                <Text>{place.id}</Text>
+              </View> */}
+              {/* <Image source={images.MapScreen.police}
                      style={styles.MarkerImage}
-              />
+              /> */}
             </MapView.Marker>);
         })}
       </MapView>

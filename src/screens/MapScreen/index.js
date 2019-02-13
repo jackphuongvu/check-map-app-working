@@ -1,16 +1,16 @@
 import React, { Component } from 'react';
 import { View, StyleSheet } from 'react-native';
-// import DropdownAlert from 'react-native-dropdownalert';
+// import DropdownAlert from "react-native-dropdownalert";
 
 import Map from '../../containers/Map';
-import RNDropdownAlert from '../../containers/DropdownAlert';
 import CurrentRegion from '../../containers/CurrentRegion';
 import Speed from '../../containers/Speed';
 import ReportSection from './ReportSection';
 
-import styles from './styles';
+import styles, { dropDownStyles } from './styles';
+import images from "../../config/images";
 
-export default class MapScreen extends Component {
+class MapScreen extends Component {
   render() {
     return (
       <View style={styles.container}>
@@ -19,13 +19,15 @@ export default class MapScreen extends Component {
           StyleSheet.absoluteFillObject,
           styles.mainLayout,
         ]}>
-          {/*<CurrentRegion/>*/}
-          {/*<Speed/>*/}
+          {/* <CurrentRegion/>
+          <Speed/> */}
+
           <ReportSection/>
         </View>
-        <RNDropdownAlert/>
 
       </View>
     );
   }
 }
+
+export default MapScreen;

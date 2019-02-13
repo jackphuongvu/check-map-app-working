@@ -2,9 +2,7 @@ import {createStackNavigator, StackNavigator, createDrawerNavigator,
   DrawerItems, SafeAreaView
 } from "react-navigation";
 
-import Map from '../containers/Map';
-
-import MapScreen from '../screens/MapScreen';
+import MapScreen from '../containers/MapScreen';
 
 const MapScreenNavigator = createStackNavigator({
   Home : {

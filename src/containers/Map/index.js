@@ -1,5 +1,8 @@
 import Map from '../../components/Map';
-import {setStreet, setCurrentSpeed, setCity, setRegion, getCurrentLocation, setLimitSpeed,
+import {
+  // getNotePlaces,
+  
+  setStreet, setCurrentSpeed, setCity, setRegion, getCurrentLocation, setLimitSpeed,
   getCurrentLocationWithAsync, fetchNotePlaces,
   sendMarkerToServer,
   queryNotePlacesWithAsync
@@ -11,8 +14,8 @@ const mapStateToProps = state => state.MapView;
 
 const mapDispatchToProps = (dispatch) => {
   return {
-    // getCurrentLocation : () => {
-    //   dispatch(getCurrentLocation());
+    // getNotePlaces : () => {
+    //   dispatch(getNotePlaces());
     // },
     setCity : (currentCity) => {
       dispatch(setCity(currentCity));

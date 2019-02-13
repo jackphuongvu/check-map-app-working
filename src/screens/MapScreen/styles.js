@@ -1,4 +1,4 @@
-import { StyleSheet } from 'react-native';
+import { StyleSheet, StatusBar } from 'react-native';
 
 const styles = StyleSheet.create({
   container : {
@@ -9,8 +9,6 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     flex : 1
   },
-
-  /** DropdownAlert */
   defaultContainer : {
     flexDirection : 'row',
     flex : 1,
@@ -43,5 +41,36 @@ const styles = StyleSheet.create({
 
 
 });
+
+export const dropDownStyles = {
+  defaultContainer : {
+    flexDirection : 'row',
+    flex : 1,
+    backgroundColor : 'yellow',
+    justifyContent : 'center',
+    alignItems : 'center',
+    padding: 12,
+    paddingTop: StatusBar.currentHeight,
+    margin : 20,
+    borderRadius : 8,
+    shadowColor : 'rgba(0,0,0,1)',
+    shadowOffset : {
+      width : 0,
+      height : 5
+    },
+    shadowRadius : 10,
+    shadowOpacity : 0.5
+  },
+  messageStyle : {
+    fontSize: 14, textAlign: 'left', fontWeight: 'bold', color: 'white',
+  },
+  imageStyle : {
+    marginTop : 10,
+    marginLeft : 3,
+    marginRight : 5,
+    alignItems : 'center',
+    height : 44 // 44
+  }
+};
 
 export default styles;
