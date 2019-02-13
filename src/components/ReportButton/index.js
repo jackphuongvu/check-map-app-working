@@ -14,7 +14,8 @@ class ReportButton extends Component {
   render() {
     return (
       <TouchableOpacity style={[styles.buttonItem]}
-                        onPress={this.props.onPress}>
+                        onPress={this.props.onPress}
+      >
         <View style={styles.buttonRowItems}>
           <View style={styles.buttonItemImage}>
             <Image source={this.props.ImageUrl}/>
